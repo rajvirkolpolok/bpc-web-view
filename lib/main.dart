@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget {
       home: const WebViewApp(),
     );
   }
+  
 }
 
 class WebViewApp extends StatefulWidget {
