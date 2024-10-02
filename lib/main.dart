@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:bpc_web_view/my_web_view.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 void main() {
@@ -17,7 +16,6 @@ class MyApp extends StatelessWidget {
       home: const WebViewApp(),
     );
   }
-  
 }
 
 class WebViewApp extends StatefulWidget {
@@ -28,12 +26,27 @@ class WebViewApp extends StatefulWidget {
 }
 
 class _WebViewAppState extends State<WebViewApp> {
-  late final WebViewController controller;
+  late final WebViewController _controller;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    controller = WebViewController()
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) => setState(() => _isLoading = true),
+          onPageFinished: (_) => setState(() => _isLoading = false),
+          onWebResourceError: (error) {
+            // Handle web resource error
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error loading page: ${error.description}')),
+            );
+          },
+        ),
+      )
       ..loadRequest(
         Uri.parse('https://bpc.kolpolok.com/'),
       );
@@ -42,7 +55,22 @@ class _WebViewAppState extends State<WebViewApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: MyWebView(controller: controller),
+      appBar: AppBar(
+        title: const Text('Web View Example'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _controller.reload(),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _controller),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator()),
+        ],
+      ),
     );
   }
 }
